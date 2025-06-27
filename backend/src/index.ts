@@ -7,6 +7,8 @@ import { generateCode } from './utils';
 dotenv.config();
 const app = express();
 app.use(express.json());
+import cros from 'cors'
+app.use(cros());
 
 // 1) Create Short URL
 app.post('/shorturls', async (req : any, res : any) => {
