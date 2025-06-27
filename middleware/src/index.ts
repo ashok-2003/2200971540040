@@ -16,32 +16,41 @@ export async function log(
   level: Level,
   pkg: LogPackage,
   message: string
-): Promise<{ logID: string; message: string }> {
+): Promise<void> {
+  // If no auth token, skip logging
+  if (!AUTH_TOKEN) {
+    console.warn('Logging skipped: no AUTH_TOKEN provided');
+    return;
+  }
+
+  // Validate inputs
   if (!VALID_STACKS.includes(stack)) {
-    throw new Error(`Invalid stack: ${stack}`);
+    console.warn(`Invalid stack: ${stack}`);
+    return;
   }
   if (!VALID_LEVELS.includes(level)) {
-    throw new Error(`Invalid level: ${level}`);
+    console.warn(`Invalid level: ${level}`);
+    return;
   }
   if (!VALID_PACKAGES.includes(pkg)) {
-    throw new Error(`Invalid package: ${pkg}`);
+    console.warn(`Invalid package: ${pkg}`);
+    return;
   }
   if (!message.trim()) {
-    throw new Error(`Invalid message: must be non-empty`);
+    console.warn('Invalid message: must be non-empty');
+    return;
   }
 
   const payload = { stack, level, package: pkg, message };
-
   const headers: Record<string, string> = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${AUTH_TOKEN}`
   };
-  if (AUTH_TOKEN) headers["Authorization"] = `Bearer ${AUTH_TOKEN}`;
 
   try {
-    const response = await axios.post(LOG_API_URL, payload, { headers });
-    return response.data;
+    await axios.post(LOG_API_URL, payload, { headers });
   } catch (error: any) {
-    const status = error.response?.status;
-    throw new Error(`Failed to send log${status ? `, status: ${status}` : ""}`);
+    console.error(`Logging error: ${error.message || error}`);
   }
 }
+
